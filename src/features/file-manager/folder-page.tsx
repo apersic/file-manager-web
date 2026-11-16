@@ -14,6 +14,7 @@ import {
   type NodeId,
 } from "@/features/file-manager/node";
 import { NodeList } from "@/features/file-manager/node-list";
+import { SearchBox } from "@/features/file-manager/search-box";
 
 export function FolderPage() {
   const params = useParams();
@@ -89,6 +90,7 @@ function FolderBody({ node }: { node: NodeDetail }) {
 function FolderContents({ parentId }: { parentId: NodeId }) {
   return (
     <>
+      <SearchBox parentId={parentId} />
       <CreateNodeControls parentId={parentId} />
       <FolderChildren parentId={parentId} />
     </>

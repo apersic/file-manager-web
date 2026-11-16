@@ -1,6 +1,6 @@
 # File manager web
 
-React app for the file tree. This build browses folders and creates files and folders. Product rules are in [specification.md](specification.md). The HTTP contract is in [file-manager-api/specification.md](../file-manager-api/specification.md).
+React app for the file tree. This build browses folders, creates files and folders, and searches by name. Product rules are in [specification.md](specification.md). The HTTP contract is in [file-manager-api/specification.md](../file-manager-api/specification.md).
 
 ## Setup
 
@@ -45,4 +45,4 @@ npm run format
 
 ## Not in this build
 
-No search and no delete.
+No delete.
