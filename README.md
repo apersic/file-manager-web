@@ -1,6 +1,6 @@
 # File manager web
 
-React app for the file tree. This build is the shell: a placeholder home page, a local 404, and the API client. Product rules are in [specification.md](specification.md). The HTTP contract is in [file-manager-api/specification.md](../file-manager-api/specification.md).
+React app for the file tree. This build browses folders. Product rules are in [specification.md](specification.md). The HTTP contract is in [file-manager-api/specification.md](../file-manager-api/specification.md).
 
 ## Setup
 
@@ -18,7 +18,7 @@ The client uses `http://localhost:8080` when `VITE_API_URL` is unset. Copy `.env
 npm run dev
 ```
 
-The app listens on port 5173 and does not pick another port. The API allows that origin. The placeholder page loads without the API. Stop the server with Ctrl+C.
+The app listens on port 5173 and does not pick another port. The API allows that origin. `/` loads Home from the API and redirects to `/folders/:folderId`, so the API has to be running. Stop the server with Ctrl+C.
 
 ## Production build
 
@@ -45,4 +45,4 @@ npm run format
 
 ## Not in this build
 
-No folder list, no create, no search, and no delete. The home page says browsing is not implemented yet.
+No create, no search, and no delete.

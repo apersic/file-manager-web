@@ -2,11 +2,15 @@
 
 The browser for the file manager. A file is a name plus `createdAt` and `updatedAt`. It has no bytes. There is no login.
 
-This build is the shell. It does not list folders, create nodes, search, or delete. The request and response shapes are the API's. They are in [file-manager-api/specification.md](../file-manager-api/specification.md). This UI does not define a second contract.
+This build browses folders. It does not create nodes, search, or delete. The request and response shapes are the API's. They are in [file-manager-api/specification.md](../file-manager-api/specification.md). This UI does not define a second contract.
 
 ## This build
 
-- `/` says browsing is not implemented yet and links to this file.
+- `/` loads Home from `GET /api/v1/nodes/root` and redirects to `/folders/:folderId`.
+- That page shows breadcrumbs and the children of the folder. Load more asks for the next page. The first request omits `cursor` and `limit`. The next request sends the `nextCursor` from the previous page. Refresh keeps the folder because the id is in the URL.
+- A folder with no children says "This folder is empty."
+- A missing folder and a malformed id both say the folder was not found. A malformed id does not call the API.
+- Opening a file id shows that file and does not ask for children.
 - Any other path is a local 404, with a link back to `/`.
 - A render failure shows its own page. It is not the 404.
 - The API base URL is `VITE_API_URL`. When that variable is unset, the client uses `http://localhost:8080`.
@@ -17,8 +21,6 @@ This build is the shell. It does not list folders, create nodes, search, or dele
 - The dev server listens on port 5173 and refuses another port, matching the API CORS default.
 
 ## Planned behavior
-
-The folder id will live in the URL. `/` will load Home from `GET /api/v1/nodes/root` and redirect to `/folders/:folderId`. That page will show breadcrumbs and a keyset list with Load more. Refresh keeps the folder. A malformed id does not call the API.
 
 Creating a folder or a file sends `parentId`, `kind`, and `name`. A 400 field map is shown on the form. Any other failure stays on the toast. After 201, the parent list is invalidated. After 409, the parent list is refetched. There is no client idempotency key.
 
@@ -32,8 +34,6 @@ Deleting a folder asks for confirmation and says the delete removes everything i
 
 ## Still unfinished
 
-- No folder list, breadcrumbs, or Load more.
 - No create dialog.
 - No search box.
 - No delete action.
-- No MSW.
