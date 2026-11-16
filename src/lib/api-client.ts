@@ -1,7 +1,17 @@
-import axios, { type AxiosAdapter, type AxiosRequestConfig } from "axios";
+import axios, {
+  isAxiosError,
+  type AxiosAdapter,
+  type AxiosRequestConfig,
+} from "axios";
 import { toast } from "react-toastify";
 import { env, normalizeApiUrl } from "@/config/env";
 import { describeFailure, failureMessage } from "@/lib/api-failure";
+
+declare module "axios" {
+  interface AxiosRequestConfig {
+    formFields?: boolean;
+  }
+}
 
 export type ApiClient = {
   get<TResponse>(url: string, config?: AxiosRequestConfig): Promise<TResponse>;
@@ -41,7 +51,11 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     (response) => response.data,
     (error: unknown) => {
       const failure = describeFailure(error);
-      if (failure.kind !== "canceled") {
+      const shownOnForm =
+        failure.kind === "fields" &&
+        isAxiosError(error) &&
+        error.config?.formFields === true;
+      if (failure.kind !== "canceled" && !shownOnForm) {
         toast.error(failureMessage(failure));
       }
       return Promise.reject(error);
