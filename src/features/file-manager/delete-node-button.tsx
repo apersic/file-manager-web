@@ -59,10 +59,12 @@ export function DeleteNodeButton({ node }: { node: NodeSummary }) {
     <>
       <Button
         type="button"
+        size="small"
         aria-label={`Delete ${node.name}`}
         onClick={() => {
           setOpen(true);
         }}
+        sx={{ color: "text.secondary", fontWeight: 600, minWidth: 0 }}
       >
         Delete
       </Button>
@@ -77,6 +79,8 @@ export function DeleteNodeButton({ node }: { node: NodeSummary }) {
           </Button>
           <Button
             type="button"
+            variant="contained"
+            color="error"
             onClick={() => {
               void confirm();
             }}

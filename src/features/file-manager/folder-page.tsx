@@ -64,11 +64,17 @@ function LoadedFolder({ id }: { id: NodeId }) {
   }
 
   return (
-    <Page title={nodeQuery.data.name}>
-      <FolderBreadcrumbs
-        ancestors={nodeQuery.data.ancestors}
-        current={nodeQuery.data}
-      />
+    <Page
+      title={nodeQuery.data.name}
+      leading={
+        nodeQuery.data.ancestors.length > 0 ? (
+          <FolderBreadcrumbs
+            ancestors={nodeQuery.data.ancestors}
+            current={nodeQuery.data}
+          />
+        ) : null
+      }
+    >
       <FolderBody node={nodeQuery.data} />
     </Page>
   );

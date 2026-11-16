@@ -4,10 +4,12 @@ import { SearchPage } from "@/features/file-manager/search-page";
 import { HomePage } from "@/app/routes/home-page";
 import { NotFoundPage } from "@/app/routes/not-found-page";
 import { RouteError } from "@/app/routes/route-error";
+import { AppShell } from "@/app/shell";
 
 export const routes = [
   {
     path: "/",
+    element: <AppShell />,
     errorElement: <RouteError />,
     children: [
       { index: true, element: <HomePage /> },

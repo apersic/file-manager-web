@@ -77,10 +77,22 @@ export function CreateNodeControls({ parentId }: CreateNodeControlsProps) {
   return (
     <>
       <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-        <Button type="button" onClick={() => open("FOLDER")}>
+        <Button
+          type="button"
+          variant="contained"
+          onClick={() => {
+            open("FOLDER");
+          }}
+        >
           New folder
         </Button>
-        <Button type="button" onClick={() => open("FILE")}>
+        <Button
+          type="button"
+          variant="outlined"
+          onClick={() => {
+            open("FILE");
+          }}
+        >
           New file
         </Button>
       </Stack>
@@ -94,6 +106,7 @@ export function CreateNodeControls({ parentId }: CreateNodeControlsProps) {
                 fullWidth
                 margin="dense"
                 name="name"
+                autoComplete="off"
                 label="Name"
                 value={name}
                 error={nameError !== undefined}
@@ -113,7 +126,11 @@ export function CreateNodeControls({ parentId }: CreateNodeControlsProps) {
               <Button type="button" onClick={close} disabled={create.isPending}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={create.isPending}>
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={create.isPending}
+              >
                 {create.isPending ? "Creating" : "Create"}
               </Button>
             </DialogActions>
