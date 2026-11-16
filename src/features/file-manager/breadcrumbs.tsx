@@ -14,17 +14,24 @@ export function FolderBreadcrumbs({
   current,
 }: FolderBreadcrumbsProps) {
   return (
-    <Breadcrumbs aria-label="Folder path" sx={{ mb: 2 }}>
+    <Breadcrumbs aria-label="Folder path" sx={{ mb: 1 }}>
       {ancestors.map((ancestor) => (
         <Link
           key={ancestor.id}
           component={RouterLink}
           to={`/folders/${ancestor.id}`}
+          underline="hover"
+          sx={{ color: "text.secondary", fontSize: 13 }}
         >
           {ancestor.name}
         </Link>
       ))}
-      <Typography aria-current="page">{current.name}</Typography>
+      <Typography
+        aria-current="page"
+        sx={{ color: "text.primary", fontSize: 13, fontWeight: 600 }}
+      >
+        {current.name}
+      </Typography>
     </Breadcrumbs>
   );
 }

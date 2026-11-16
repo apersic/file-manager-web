@@ -1,15 +1,14 @@
 import Button from "@mui/material/Button";
 import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
-import { Link as RouterLink, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import { Page } from "@/components/page";
-import { DeleteNodeButton } from "@/features/file-manager/delete-node-button";
-import { type NodeKind, type NodeSummary } from "@/features/file-manager/node";
+import { type NodeSummary } from "@/features/file-manager/node";
+import { FileColumns } from "@/features/file-manager/node-list";
+import { NodeRow } from "@/features/file-manager/node-row";
+import { MatchToggle } from "@/features/file-manager/search-box";
 import {
   parentFolderPath,
   readSearchRequest,
@@ -17,19 +16,6 @@ import {
   type SearchMatch,
   type SearchRequest,
 } from "@/features/file-manager/search-nodes";
-
-function kindLabel(kind: NodeKind): string {
-  switch (kind) {
-    case "FILE":
-      return "File";
-    case "FOLDER":
-      return "Folder";
-    default: {
-      const unreachable: never = kind;
-      return unreachable;
-    }
-  }
-}
 
 function matchLabel(match: SearchMatch): string {
   switch (match) {
@@ -94,28 +80,11 @@ function ReadySearch({
 
   return (
     <Page title="Search">
-      <Typography gutterBottom>
-        {matchLabel(request.match)} "{request.q}"
+      <Typography gutterBottom sx={{ color: "text.secondary" }}>
+        {matchLabel(request.match)} “{request.q}”
         {request.parentId === null ? " everywhere" : " in this folder"}
       </Typography>
-      <Button
-        type="button"
-        aria-pressed={request.match === "PREFIX"}
-        onClick={() => {
-          onMatch("PREFIX");
-        }}
-      >
-        Starts with
-      </Button>
-      <Button
-        type="button"
-        aria-pressed={request.match === "EXACT"}
-        onClick={() => {
-          onMatch("EXACT");
-        }}
-      >
-        Exact name
-      </Button>
+      <MatchToggle match={request.match} onSelect={onMatch} />
       <SearchBody
         loading={results.isLoading}
         failed={results.isError}
@@ -162,19 +131,10 @@ function SearchBody({
   }
   return (
     <>
-      <List aria-label="Search results">
+      <FileColumns />
+      <List aria-label="Search results" disablePadding>
         {items.map((node) => (
-          <ListItem
-            key={node.id}
-            secondaryAction={<DeleteNodeButton node={node} />}
-          >
-            <ListItemButton component={RouterLink} to={parentFolderPath(node)}>
-              <ListItemText
-                primary={node.name}
-                secondary={kindLabel(node.kind)}
-              />
-            </ListItemButton>
-          </ListItem>
+          <NodeRow key={node.id} node={node} to={parentFolderPath(node)} />
         ))}
       </List>
       {hasNextPage ? (

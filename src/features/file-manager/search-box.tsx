@@ -9,6 +9,7 @@ import Typography from "@mui/material/Typography";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState, type FormEvent } from "react";
 import { Link as RouterLink, useNavigate } from "react-router";
+import { FileGlyph } from "@/components/file-glyph";
 import {
   parentFolderPath,
   searchPath,
@@ -83,33 +84,16 @@ export function SearchBox({ parentId }: SearchBoxProps) {
         }}
         slotProps={{
           htmlInput: {
+            name: "q",
             role: "combobox",
             "aria-autocomplete": "list",
             "aria-expanded": showSuggestions,
             "aria-controls": "folder-search-list",
+            autoComplete: "off",
           },
         }}
       />
-      <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-        <Button
-          type="button"
-          aria-pressed={match === "PREFIX"}
-          onClick={() => {
-            selectMatch("PREFIX");
-          }}
-        >
-          Starts with
-        </Button>
-        <Button
-          type="button"
-          aria-pressed={match === "EXACT"}
-          onClick={() => {
-            selectMatch("EXACT");
-          }}
-        >
-          Exact name
-        </Button>
-      </Box>
+      <MatchToggle match={match} onSelect={selectMatch} />
       {showSuggestions ? (
         <SuggestionList
           loading={suggestions.isLoading}
@@ -118,6 +102,66 @@ export function SearchBox({ parentId }: SearchBoxProps) {
         />
       ) : null}
     </Box>
+  );
+}
+
+export function MatchToggle({
+  match,
+  onSelect,
+}: {
+  match: SearchMatch;
+  onSelect: (match: SearchMatch) => void;
+}) {
+  return (
+    <Box sx={{ display: "flex", gap: 1, mt: 1.5 }}>
+      <MatchChoice
+        pressed={match === "PREFIX"}
+        onClick={() => {
+          onSelect("PREFIX");
+        }}
+      >
+        Starts with
+      </MatchChoice>
+      <MatchChoice
+        pressed={match === "EXACT"}
+        onClick={() => {
+          onSelect("EXACT");
+        }}
+      >
+        Exact name
+      </MatchChoice>
+    </Box>
+  );
+}
+
+function MatchChoice({
+  pressed,
+  onClick,
+  children,
+}: {
+  pressed: boolean;
+  onClick: () => void;
+  children: string;
+}) {
+  return (
+    <Button
+      type="button"
+      aria-pressed={pressed}
+      onClick={onClick}
+      sx={{
+        borderRadius: 999,
+        px: 1.75,
+        color: pressed ? "primary.contrastText" : "text.primary",
+        bgcolor: pressed ? "primary.main" : "transparent",
+        border: 1,
+        borderColor: pressed ? "primary.main" : "divider",
+        "&:hover": {
+          bgcolor: pressed ? "primary.dark" : "action.hover",
+        },
+      }}
+    >
+      {children}
+    </Button>
   );
 }
 
@@ -156,10 +200,16 @@ function SuggestionList({
             component={RouterLink}
             to={parentFolderPath(node)}
             role="option"
+            sx={{ gap: 1.5 }}
           >
+            <FileGlyph kind={node.kind} />
             <ListItemText
               primary={node.name}
               secondary={kindLabel(node.kind)}
+              sx={{ my: 0, minWidth: 0 }}
+              slotProps={{
+                primary: { noWrap: true },
+              }}
             />
           </ListItemButton>
         </ListItem>
