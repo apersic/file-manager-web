@@ -10,6 +10,7 @@ import { describeFailure, failureMessage } from "@/lib/api-failure";
 declare module "axios" {
   interface AxiosRequestConfig {
     formFields?: boolean;
+    gone?: boolean;
   }
 }
 
@@ -55,7 +56,11 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
         failure.kind === "fields" &&
         isAxiosError(error) &&
         error.config?.formFields === true;
-      if (failure.kind !== "canceled" && !shownOnForm) {
+      const alreadyGone =
+        isAxiosError(error) &&
+        error.config?.gone === true &&
+        error.response?.status === 404;
+      if (failure.kind !== "canceled" && !shownOnForm && !alreadyGone) {
         toast.error(failureMessage(failure));
       }
       return Promise.reject(error);

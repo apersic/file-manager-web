@@ -14,7 +14,7 @@ export function FolderBreadcrumbs({
   current,
 }: FolderBreadcrumbsProps) {
   return (
-    <Breadcrumbs aria-label="Folder path">
+    <Breadcrumbs aria-label="Folder path" sx={{ mb: 2 }}>
       {ancestors.map((ancestor) => (
         <Link
           key={ancestor.id}

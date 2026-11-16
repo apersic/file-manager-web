@@ -106,6 +106,20 @@ describe("api client", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
+  test("does not toast a 404 that the caller treats as already gone", async () => {
+    const client = createApiClient({
+      baseURL: "http://localhost:8080",
+      adapter: fail(404, envelope),
+    });
+    renderToasts();
+
+    await expect(
+      client.delete("/api/v1/nodes/4", { gone: true }),
+    ).rejects.toSatisfy(isAxiosError);
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
   test("does not redirect on 401", async () => {
     const client = createApiClient({
       baseURL: "http://localhost:8080",

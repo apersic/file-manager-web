@@ -1,6 +1,6 @@
 # File manager web
 
-React app for the file tree. This build browses folders, creates files and folders, and searches by name. Product rules are in [specification.md](specification.md). The HTTP contract is in [file-manager-api/specification.md](../file-manager-api/specification.md).
+React app for the file tree. This build browses folders, creates files and folders, searches by name, and deletes. Product rules are in [specification.md](specification.md). The HTTP contract is in [file-manager-api/specification.md](../file-manager-api/specification.md).
 
 ## Setup
 
@@ -43,6 +43,6 @@ npm run format
 
 `.github/workflows/prod_build.yaml` runs on push and pull request to `main`. It installs the Node version in `.nvmrc`, then runs `npm ci`, `npm run typecheck`, `npm run lint`, `npm run test`, and `npm run build`.
 
-## Not in this build
+## Still missing
 
-No delete.
+A file has no bytes. There is no rename, no move, and no login.
