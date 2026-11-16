@@ -92,6 +92,20 @@ describe("api client", () => {
     );
   });
 
+  test("leaves a field map for the form when the request asks for that", async () => {
+    const client = createApiClient({
+      baseURL: "http://localhost:8080",
+      adapter: fail(400, { name: "Name is required" }),
+    });
+    renderToasts();
+
+    await expect(
+      client.post("/api/v1/nodes", { name: "" }, { formFields: true }),
+    ).rejects.toSatisfy(isAxiosError);
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
   test("does not redirect on 401", async () => {
     const client = createApiClient({
       baseURL: "http://localhost:8080",

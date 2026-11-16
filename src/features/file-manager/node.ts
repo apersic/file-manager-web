@@ -121,6 +121,14 @@ function parseAncestor(value: unknown): Ancestor | null {
   return { id, name, kind };
 }
 
+export function parseNodeSummary(value: unknown): NodeSummary {
+  const summary = parseSummary(value);
+  if (summary === null) {
+    return invalidResponse();
+  }
+  return summary;
+}
+
 export function parseNodeDetail(value: unknown): NodeDetail {
   const summary = parseSummary(value);
   if (summary === null || !isRecord(value) || !Array.isArray(value.ancestors)) {

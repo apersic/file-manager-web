@@ -43,6 +43,7 @@ type NodeHandlersOptions = {
   nodes?: CatalogNode[];
   pageSize?: number;
   onList?: (url: URL) => void;
+  onCreate?: (input: { body: unknown; headers: Headers }) => void;
 };
 
 function compare(left: CatalogNode, right: CatalogNode): number {
@@ -90,19 +91,83 @@ export function toDetail(node: CatalogNode, nodes: CatalogNode[] = catalog) {
   };
 }
 
+function statusError(status: number): string {
+  switch (status) {
+    case 400:
+      return "Bad Request";
+    case 404:
+      return "Not Found";
+    case 409:
+      return "Conflict";
+    default:
+      return "Error";
+  }
+}
+
 function errorBody(status: number, path: string, message: string) {
   return {
     message,
     status,
-    error: status === 404 ? "Not Found" : "Conflict",
+    error: statusError(status),
     timestamp: createdAt,
     path,
   };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function nameKey(name: string): string {
+  return name.replace(/[A-Z]/g, (letter) =>
+    String.fromCharCode(letter.charCodeAt(0) + 32),
+  );
+}
+
+function readCreate(body: unknown):
+  | {
+      ok: true;
+      parentId: number;
+      kind: CatalogNode["kind"];
+      name: string;
+    }
+  | { ok: false; fields: Record<string, string> } {
+  const fields: Record<string, string> = {};
+  const record = isRecord(body) ? body : {};
+  const parentId = record.parentId;
+  const kind = record.kind;
+  const name = record.name;
+  const parsedParent =
+    typeof parentId === "number" && Number.isInteger(parentId) && parentId > 0
+      ? parentId
+      : null;
+  const parsedKind = kind === "FILE" || kind === "FOLDER" ? kind : null;
+  const parsedName =
+    typeof name === "string" && name.trim() !== "" ? name : null;
+  if (parsedParent === null) {
+    fields.parentId = "Parent is required";
+  }
+  if (parsedKind === null) {
+    fields.kind = "Kind is required";
+  }
+  if (parsedName === null) {
+    fields.name = "Name is required";
+  }
+  if (parsedParent === null || parsedKind === null || parsedName === null) {
+    return { ok: false, fields };
+  }
+  return {
+    ok: true,
+    parentId: parsedParent,
+    kind: parsedKind,
+    name: parsedName,
+  };
+}
+
 export function nodeHandlers(options: NodeHandlersOptions = {}) {
-  const nodes = options.nodes ?? catalog;
+  const nodes = [...(options.nodes ?? catalog)];
   const pageSize = options.pageSize ?? 50;
+  let nextId = nodes.reduce((max, node) => Math.max(max, node.id), 0) + 1;
 
   return [
     http.get("*/api/v1/nodes/root", () => {
@@ -140,6 +205,58 @@ export function nodeHandlers(options: NodeHandlersOptions = {}) {
       const next =
         start + pageSize < children.length ? String(start + pageSize) : null;
       return HttpResponse.json({ items, nextCursor: next });
+    }),
+    http.post("*/api/v1/nodes", async ({ request }) => {
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return HttpResponse.json(
+          errorBody(400, "/api/v1/nodes", "Malformed request body"),
+          { status: 400 },
+        );
+      }
+      options.onCreate?.({ body, headers: request.headers });
+      const parsed = readCreate(body);
+      if (!parsed.ok) {
+        return HttpResponse.json(parsed.fields, { status: 400 });
+      }
+      const parent = nodes.find((node) => node.id === parsed.parentId);
+      if (parent === undefined) {
+        return HttpResponse.json(errorBody(404, "/api/v1/nodes", "Not Found"), {
+          status: 404,
+        });
+      }
+      if (parent.kind !== "FOLDER") {
+        return HttpResponse.json(
+          errorBody(409, "/api/v1/nodes", "Parent is not a folder"),
+          { status: 409 },
+        );
+      }
+      const duplicate = nodes.some(
+        (node) =>
+          node.parentId === parsed.parentId &&
+          nameKey(node.name) === nameKey(parsed.name),
+      );
+      if (duplicate) {
+        return HttpResponse.json(
+          errorBody(
+            409,
+            "/api/v1/nodes",
+            "A file or folder with this name already exists",
+          ),
+          { status: 409 },
+        );
+      }
+      const created: CatalogNode = {
+        id: nextId,
+        parentId: parsed.parentId,
+        kind: parsed.kind,
+        name: parsed.name,
+      };
+      nextId += 1;
+      nodes.push(created);
+      return HttpResponse.json(toResponse(created), { status: 201 });
     }),
     http.get("*/api/v1/nodes/:id", ({ params }) => {
       const id = Number(params.id);

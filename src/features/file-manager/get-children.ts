@@ -29,9 +29,13 @@ export function getChildren(input: {
     .then(parseNodePage);
 }
 
+export function childrenQueryKey(parentId: NodeId) {
+  return ["nodes", parentId, "children"] as const;
+}
+
 export function childrenQueryOptions(parentId: NodeId) {
   return infiniteQueryOptions({
-    queryKey: ["nodes", parentId, "children"],
+    queryKey: childrenQueryKey(parentId),
     queryFn: ({ pageParam, signal }) =>
       getChildren({ parentId, cursor: pageParam, signal }),
     initialPageParam: firstCursor,

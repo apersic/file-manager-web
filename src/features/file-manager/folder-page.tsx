@@ -4,6 +4,7 @@ import { isAxiosError } from "axios";
 import { useParams } from "react-router";
 import { Page } from "@/components/page";
 import { FolderBreadcrumbs } from "@/features/file-manager/breadcrumbs";
+import { CreateNodeControls } from "@/features/file-manager/create-node-dialog";
 import { EmptyFolder } from "@/features/file-manager/empty-folder";
 import { childrenQueryOptions } from "@/features/file-manager/get-children";
 import { nodeQueryOptions } from "@/features/file-manager/get-node";
@@ -86,6 +87,15 @@ function FolderBody({ node }: { node: NodeDetail }) {
 }
 
 function FolderContents({ parentId }: { parentId: NodeId }) {
+  return (
+    <>
+      <CreateNodeControls parentId={parentId} />
+      <FolderChildren parentId={parentId} />
+    </>
+  );
+}
+
+function FolderChildren({ parentId }: { parentId: NodeId }) {
   const childrenQuery = useInfiniteQuery(childrenQueryOptions(parentId));
   const items = childrenQuery.data?.pages.flatMap((page) => page.items) ?? [];
 
