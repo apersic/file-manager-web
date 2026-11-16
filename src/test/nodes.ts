@@ -45,7 +45,36 @@ type NodeHandlersOptions = {
   onList?: (url: URL) => void;
   onCreate?: (input: { body: unknown; headers: Headers }) => void;
   onSearch?: (url: URL) => void;
+  onDelete?: (id: number) => void;
 };
+
+function removeSubtree(nodes: CatalogNode[], id: number): boolean {
+  if (!nodes.some((node) => node.id === id)) {
+    return false;
+  }
+  const remove = new Set<number>([id]);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const node of nodes) {
+      if (
+        node.parentId !== null &&
+        remove.has(node.parentId) &&
+        !remove.has(node.id)
+      ) {
+        remove.add(node.id);
+        changed = true;
+      }
+    }
+  }
+  for (let index = nodes.length - 1; index >= 0; index -= 1) {
+    const node = nodes[index];
+    if (node !== undefined && remove.has(node.id)) {
+      nodes.splice(index, 1);
+    }
+  }
+  return true;
+}
 
 function compareByKey(left: CatalogNode, right: CatalogNode): number {
   const byName = nameKey(left.name).localeCompare(nameKey(right.name));
@@ -320,6 +349,25 @@ export function nodeHandlers(options: NodeHandlersOptions = {}) {
       nextId += 1;
       nodes.push(created);
       return HttpResponse.json(toResponse(created), { status: 201 });
+    }),
+    http.delete("*/api/v1/nodes/:id", ({ params }) => {
+      const id = Number(params.id);
+      options.onDelete?.(id);
+      const node = nodes.find((item) => item.id === id);
+      const path = `/api/v1/nodes/${String(params.id)}`;
+      if (node === undefined) {
+        return HttpResponse.json(errorBody(404, path, "Node was not found"), {
+          status: 404,
+        });
+      }
+      if (node.parentId === null) {
+        return HttpResponse.json(
+          errorBody(409, path, "The root folder cannot be deleted"),
+          { status: 409 },
+        );
+      }
+      removeSubtree(nodes, id);
+      return new HttpResponse(null, { status: 204 });
     }),
     http.get("*/api/v1/nodes/:id", ({ params }) => {
       const id = Number(params.id);

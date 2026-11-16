@@ -8,6 +8,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import { Link as RouterLink, useSearchParams } from "react-router";
 import { Page } from "@/components/page";
+import { DeleteNodeButton } from "@/features/file-manager/delete-node-button";
 import { type NodeKind, type NodeSummary } from "@/features/file-manager/node";
 import {
   parentFolderPath,
@@ -163,7 +164,10 @@ function SearchBody({
     <>
       <List aria-label="Search results">
         {items.map((node) => (
-          <ListItem key={node.id} disablePadding>
+          <ListItem
+            key={node.id}
+            secondaryAction={<DeleteNodeButton node={node} />}
+          >
             <ListItemButton component={RouterLink} to={parentFolderPath(node)}>
               <ListItemText
                 primary={node.name}
