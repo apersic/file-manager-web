@@ -44,7 +44,16 @@ type NodeHandlersOptions = {
   pageSize?: number;
   onList?: (url: URL) => void;
   onCreate?: (input: { body: unknown; headers: Headers }) => void;
+  onSearch?: (url: URL) => void;
 };
+
+function compareByKey(left: CatalogNode, right: CatalogNode): number {
+  const byName = nameKey(left.name).localeCompare(nameKey(right.name));
+  if (byName !== 0) {
+    return byName;
+  }
+  return left.id - right.id;
+}
 
 function compare(left: CatalogNode, right: CatalogNode): number {
   const byName = left.name.localeCompare(right.name);
@@ -170,6 +179,60 @@ export function nodeHandlers(options: NodeHandlersOptions = {}) {
   let nextId = nodes.reduce((max, node) => Math.max(max, node.id), 0) + 1;
 
   return [
+    http.get("*/api/v1/nodes/search", ({ request }) => {
+      const url = new URL(request.url);
+      options.onSearch?.(url);
+      const q = url.searchParams.get("q");
+      const match = url.searchParams.get("match");
+      if (q === null || q.trim() === "") {
+        return HttpResponse.json({ q: "Query is required" }, { status: 400 });
+      }
+      if (match !== "EXACT" && match !== "PREFIX") {
+        return HttpResponse.json(
+          { match: "Match is required" },
+          { status: 400 },
+        );
+      }
+      const parentParam = url.searchParams.get("parentId");
+      let scope: number | null = null;
+      if (parentParam !== null) {
+        scope = Number(parentParam);
+        const parent = nodes.find((node) => node.id === scope);
+        if (parent === undefined) {
+          return HttpResponse.json(
+            errorBody(404, url.pathname, "Folder was not found"),
+            { status: 404 },
+          );
+        }
+        if (parent.kind !== "FOLDER") {
+          return HttpResponse.json(
+            errorBody(409, url.pathname, "Parent is not a folder"),
+            { status: 409 },
+          );
+        }
+      }
+      const queryKey = nameKey(q);
+      const matched = nodes
+        .filter((node) => {
+          if (scope !== null && node.parentId !== scope) {
+            return false;
+          }
+          const key = nameKey(node.name);
+          if (match === "EXACT") {
+            return key === queryKey;
+          }
+          return key.startsWith(queryKey);
+        })
+        .sort(compareByKey);
+      const limitParam = url.searchParams.get("limit");
+      const limit = limitParam === null ? 50 : Number(limitParam);
+      const cursor = url.searchParams.get("cursor");
+      const start = cursor === null ? 0 : Number(cursor);
+      const items = matched.slice(start, start + limit).map(toResponse);
+      const next =
+        start + limit < matched.length ? String(start + limit) : null;
+      return HttpResponse.json({ items, nextCursor: next });
+    }),
     http.get("*/api/v1/nodes/root", () => {
       const root = nodes.find((node) => node.parentId === null);
       if (root === undefined) {

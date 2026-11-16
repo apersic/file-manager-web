@@ -2,7 +2,7 @@
 
 The browser for the file manager. A file is a name plus `createdAt` and `updatedAt`. It has no bytes. There is no login.
 
-This build browses folders and creates files and folders. It does not search or delete. The request and response shapes are the API's. They are in [file-manager-api/specification.md](../file-manager-api/specification.md). This UI does not define a second contract.
+This build browses folders, creates files and folders, and searches by name. It does not delete. The request and response shapes are the API's. They are in [file-manager-api/specification.md](../file-manager-api/specification.md). This UI does not define a second contract.
 
 ## This build
 
@@ -14,6 +14,9 @@ This build browses folders and creates files and folders. It does not search or 
 - A folder page has New folder and New file. Each opens a dialog and sends `parentId`, `kind`, and `name`. There is no idempotency key.
 - A 400 field map is shown on that form and is not toasted. Any other failure stays on the toast.
 - After 201, the parent list is invalidated. After 409, the parent list is refetched so the existing name shows up.
+- A folder page has a search box. The typed text stays in the component. After 250 ms, a non-blank value calls `GET /api/v1/nodes/search` with `match=PREFIX`, `limit=10`, and that folder as `parentId`. A blank box does not call the API. `%` and `_` are sent as typed.
+- Starts with or Exact name, then Enter, opens `/search` with `q`, `match`, and `parentId` in the URL. A shared `/search` URL runs that query. Omit `parentId` to search the whole tree. A malformed folder id does not call the API.
+- Picking a suggestion or a result opens that entry's parent folder.
 - Any other path is a local 404, with a link back to `/`.
 - A render failure shows its own page. It is not the 404.
 - The API base URL is `VITE_API_URL`. When that variable is unset, the client uses `http://localhost:8080`.
@@ -25,8 +28,6 @@ This build browses folders and creates files and folders. It does not search or 
 
 ## Planned behavior
 
-Search text stays in the component until Enter, or a `/search` URL, runs the query. Typing uses a 250 ms debounce, `match=PREFIX`, and `limit=10`. A blank box does not call the API. Picking a suggestion opens that entry's parent folder.
-
 Deleting a folder asks for confirmation and says the delete removes everything inside it. The row disappears when the server confirms. A 404 after a delete is treated as already gone.
 
 ## Layout
@@ -35,5 +36,4 @@ Deleting a folder asks for confirmation and says the delete removes everything i
 
 ## Still unfinished
 
-- No search box.
 - No delete action.
